@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PDF Access</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: Arial;
+      background: #111;
+      color: white;
+    }
+    img {
+      width: 250px;
+      margin-top: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      margin-top: 15px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>Unlock PDF</h2>
+<p>Scan QR or click pay button</p>
+
+<img src="/static/qrcode.jpeg">
+
+<br>
+
+<button onclick="pay()">Pay ₹20</button>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+async function pay() {
+  let res = await fetch('/create-order');
+  let order = await res.json();
+
+  var options = {
+    "key": "YOUR_KEY_ID",
+    "amount": order.amount,
+    "currency": "INR",
+    "order_id": order.id,
+
+    handler: async function (response) {
+      let verify = await fetch('/verify', {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(response)
+      });
+
+      let result = await verify.json();
+
+      if(result.status === "success") {
+        window.location.href = "/pdf";
+      } else {
+        alert("Payment failed");
+      }
+    }
+  };
+
+  var rzp = new Razorpay(options);
+  rzp.open();
+}
+</script>
+
+</body>
+</html>
